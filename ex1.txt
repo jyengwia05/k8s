@@ -1,0 +1,281 @@
+Q01
+
+a. Reconfigure the deployment front-end and add a port named http exposing port 80/tcp of the container nginx.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: front-end
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        ports:
+        - containerPort: 80
+          name: http
+
+b. Create a new service named front-end-svc exposing the container port http.
+
+kubectl expose deployment front-end --name front-end-svc --port 80 --target-port 80
+
+c. Configure the new service to also expose the individual Pods via a NodePort on the nodes on which they are scheduled.
+
+k edit service front-end-svc
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: front-end-svc
+spec:
+  ports:
+  - nodePort: 31860
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: front-end-svc
+  type: NodePort
+
+Q02
+
+Scale the deployment web-server to 6 pods
+
+k create deployment web-server --image busybox
+
+k scale --replicas 6 deployment/web-server
+
+Q03
+
+Schedule a pod as follows:
+
+    Name: nginx-kusc00401
+    Image: nginx
+    Node selector: disk=ssd
+
+Reffer
+https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes/
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-kusc00401
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    imagePullPolicy: IfNotPresent
+  nodeSelector:
+    disk: ssd
+
+Q04
+
+Check to see how many nodes are ready (not including nodes tainted NoSchedule)and write the number to file.txt.
+
+k get nodes | grep -i ready | grep -v  NoSchedule |wc -l > file.txt
+
+Q05
+
+Create a persistent volume app-config, of capacity 1Gi and access mode ReadWriteMany. The type of volume is hostPath and its location is /srv/app-config.
+
+Ref:
+https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: app-config
+spec:
+  capacity:
+    storage: 10Mi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/srv/app-config"
+
+Q06
+
+a. Create a new PersistentVolumeClaim:
+
+    Name: pv-volume
+    Class: csi-hostpath-sc
+    Capacity: 10Mi
+
+b. Create a new Pod which mounts the PersistentVolumeClaim as a volume:
+
+· Name: web-server
+
+· Image: nginx
+
+· Mount path: /usr/share/nginx/html
+
+Configure the new Pod to have ReadWriteOnce access on the volume.
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: task-pv-volume
+spec:
+  capacity:
+    storage: 110Mi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pv-claim
+spec:
+  storageClassName: csi-hostpath-sc
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Mi
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web-server
+spec:
+  volumes:
+    - name: task-pv-storage
+      persistentVolumeClaim:
+        claimName: pv-claim
+  containers:
+    - name: web-server-1
+      image: nginx
+      ports:
+        - containerPort: 80
+          name: "http-server"
+      volumeMounts:
+        - mountPath: "/usr/share/nginx/html"
+          name: task-pv-storage
+
+Answer is bit altered and using a volume mount.
+Get Nuwan Chamara’s stories in your inbox
+
+Join Medium for free to get updates from this writer.
+
+Ref: https://kubernetes.io/docs/tasks/configure-pod-container
+Q07
+
+Monitor the logs of pod foobar and Extract log lines corresponding to error unable-to-access-website
+
+kubectl logs foobar | grep -i unable-to-access-website 
+
+Q08
+
+A Kubernetes worker node is in state NotReady . Fix it.
+
+May be:
+ssh to node
+
+systemctl status kubelet
+
+systemctl start kubelet
+
+systemctl enable kubelet
+
+systemctl daemon-reload
+
+Q09
+
+a. Create a new ClusterRole named deployment-clusterrole at only allows the creation of Deployment, StatefulSet and DaemonSet.
+
+# create the namespace
+kubectl create ns app-team1
+
+kubectl create clusterrole deployment-clusterrole --resource=Deployment,StatefulSet,DaemonSet --verb=create,list,get
+
+b. Create a new ServiceAccount named cicd-token in the existing namespace app-team1.
+
+kubectl create sa cicd-token -n app-team1
+
+c. Limited to namespace app-team1, bind the new ClusterRole to the new ServiceAccount cicd-token.
+
+kubectl create clusterrolebinding clusterrolebinding2 --clusterrole=deployment-clusterrole --serviceaccount=app-team1:cicd-token  -n app-team1
+
+Q10
+
+Set the node named node-1 as unavailable and reschedule all the pods running on it.
+
+kubectl drain node-1 --ignore-daemonsets --delete-emptydir-data  --force
+
+Q11
+
+Given an existing Kubernetes cluster running version 1.24.1，upgrade all of Kubernetes control plane and node components on the master node only to version 1.24.2 You are also expected to upgrade kubelet and kubectl on the master node.
+
+Be sure to drain the master node before upgrading it and uncordon it after the upgrade. Do not upgrade the worker nodes, etcd, the container manager, the CNI plugin, the DNS service or any other add-ons.
+
+https://v1-22.docs.kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/
+
+Q12
+
+a. Create a snapshot of the existing etcd instance running at https://127.0.0.1:2379
+
+b. Restore an existing snapshot.
+
+https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/#backing-up-an-etcd-cluster
+
+Q13
+
+Create a new NetworkPolicy named allow-port-from-namespace to allow Pods in the existing namespace internal to connect to port 9000 of other Pods in the same namespace.
+Ensure that the new NetworkPolicy:
+· does not allow access to Pods not listening on port 9000.
+· does not allow access from Pods not in namespace my-app
+
+kubectl create ns my-app
+kubectl create ns internal
+kubectl label ns my-app project=my-app 
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-port-from-namespace
+  namespace: internal
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              project: my-app    
+      ports:
+        - protocol: TCP
+          port: 9000
+
+Q14
+
+Create a new nginx Ingress resource as follows:
+· Name: ping
+· Namespace: ing-internal
+· Exposing service hi on path /hi using service port 5678
+
+kubectl create ns ing-internal
+kubectl create ingress ping -n ing-internal --rule="/hi=hi:5678"
+
+Q15
+
+Form the pod label name=cpu-loader,find pods running high CPU workloads and write the name of the pod consuming most CPU to a file.
+Tips:
+
+a. Shortcut for creating the yaml file.
+
+export  do="--dry-run=client -o yaml"  # k get pod x $do
+
+b. Always try to generate the yaml configs from kubectl -h command rather referring Kubernetes.io docs. this will be much faster and easy.
+
+c. Test connection without port
+
+k run nginx --image nginx -n internal
+k run test --image alpine -- sleep 10000
+k exec -it test -- sh
+wget http://nginx.internal
+
+
