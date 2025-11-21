@@ -2,6 +2,7 @@ kubectl run nginx-pod --image nginx:alpine
 get pod
 kubectl get pod
 kubectl run redis  --image redis:alpine --labels tier=db
+kubectl run redis  --image=redis:alpine --labels="tier=db"
 kubectl run redis  --image redis:alpine --labels tier=db --dry-run -o yaml
 kubectl create service clusterip redis-service --tcp=6379
 kubectl create deployment webapp --image=kodekloud/webapp-color --replicas=3
@@ -11,6 +12,7 @@ kubectl get ns
 kubectl create deployment redis-deploy  -n dev-ns  --image=redis --replicas=2
 kubectl run httpd  --image httpd:alpine  --port=80
 kubectl expose pod httpd --type=ClusterIP --name=httpd --port=80 
+# kubectl run httpd  --image httpd:alpine  --port=80  --expose=true
 kubectl get ns -A
 kubectl get pods
 kubectl explain pod redis
