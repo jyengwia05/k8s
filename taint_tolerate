@@ -1,0 +1,31 @@
+
+# kubectl taint nodes node1 key1=value1:NoSchedule
+
+tolerations:
+- key: "key1"
+  operator: "Equal"
+  value: "value1"
+  effect: "NoSchedule"
+
+
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: bee
+  name: bee
+spec:
+  containers:
+  - image: nginx
+    name: bee
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+  tolerations:
+  - effect: NoSchedule
+    key: spray
+    operator: Equal
+    value: mortein
+status: {}
+
+

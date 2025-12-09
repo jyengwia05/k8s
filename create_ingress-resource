@@ -1,0 +1,4 @@
+# Create the ingress resource
+kubectl create ingress multi-service-ingress \
+  --rule="/=frontend-service:80" \
+  --rule="/api=backend-service:8080"

@@ -1,0 +1,5 @@
+We have deployed a number of PODs. They are labelled with tier, env and bu. How many PODs exist in the dev environment (env)?
+kubectl get pods -l env=dev --no-headers | wc -l
+
+# kubectl get <all,resources> -seletor env=dev --no-headers | wc -l
+# kubectl get <all,resources> -seletor env=dev,bu=finance,tier=frontend
