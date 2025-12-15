@@ -1,0 +1,35 @@
+✅ 2. Create a ConfigMap from literal key‑value pairs
+kubectl create configmap myconfig \
+  --from-literal=key1=value1 \
+  --from-literal=key2=value2
+
+✅ 3. Create a ConfigMap from a file
+kubectl create configmap myconfig --from-file=/path/to/file
+
+✅ 4. Create a ConfigMap from multiple files
+kubectl create configmap myconfig \
+  --from-file=config1=/path/to/file1 \
+  --from-file=config2=/path/to/file2
+
+✅ 5. Create a ConfigMap from an env file
+kubectl create configmap myconfig --from-env-file=/path/to/envfile
+
+
+
+#################################
+Use envFrom to define all of the ConfigMap's data as container environment variables. 
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dapi-test-pod
+spec:
+  containers:
+    - name: test-container
+      image: registry.k8s.io/busybox:1.27.2
+      command: [ "/bin/sh", "-c", "env" ]
+      envFrom:
+      - configMapRef:
+          name: special-config
+  restartPolicy: Never
+

@@ -1,0 +1,66 @@
+# Node isolation/restriction 
+kubectl get nodes --show-labels
+
+kubectl label node node-name <key>=<value>
+kubectl label node node-name <key>=<value> --overwrite # force‑replace
+
+# Edit the blue deployment with node affinity
+kubectl patch deployment blue
+   OR
+# Patch the blue deployment with node affinity
+kubectl patch deployment blue \
+  --type='json' \
+  -p='[
+    {
+      "op": "add",
+      "path": "/spec/template/spec/affinity",
+      "value": {
+        "nodeAffinity": {
+          "requiredDuringSchedulingIgnoredDuringExecution": {
+            "nodeSelectorTerms": [
+              {
+                "matchExpressions": [
+                  {
+                    "key": "color",
+                    "operator": "In",
+                    "values": ["blue"]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]'
+# Verify pods are scheduled on node01
+kubectl get pods -o wide -l app=blue
+
+#Create the deployment YAML
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: red
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: red
+  template:
+    metadata:
+      labels:
+        app: red
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: Exists
+      containers:
+        - name: nginx
+          image: nginx
+
+# kubectl apply -f red-deployment.yaml
+# kubectl get pods -o wide -l app=red
