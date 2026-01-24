@@ -1,0 +1,15 @@
+4  alias k=kubectl
+    5  k get crd
+    6  k get ippools -A -o yaml
+    7  k get pods -o wide
+    8  k get pods -A -o wide
+    9  ps awux | grep service
+   10  k expose --help
+   11  k create deploy webshop --imag nginx --replicas=4
+   12  k create deploy webshop --image nginx --replicas=4
+   13  k get pods
+   14  k get pods --selector app=webshop -o wide
+   15  k expose deploy webshop --type=NodePort --port=80
+   16  k describe svc webshop 
+   17  k get svc
+   18  curl 192.168.0.5:80:31938
