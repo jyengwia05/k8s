@@ -1,0 +1,17 @@
+helm upgrade --install ingress-nginx ingress-nginx --repo https://kubernetes.github.io/ingress-nginx -n ingress-nginx 
+helm upgrade --install ingress-nginx ingress-nginx --repo https://kubernetes.github.io/ingress-nginx -n ingress-nginx --create-namespace
+k get pods -n ingress-nginx 
+k create deploy nginxsvc --image nginx --port=80
+k get deploy
+k expose deploy nginxsvc 
+k get deploy
+k get deploy nginxsvc -o wide
+k describe nginxsvc 
+k describe svc nginxsvc 
+k create ingress --help
+k create ingress mginxsvc  --class=nginx --rule=nginxsvc.info/*=nginxsvc:80
+k port-forward -n ingress-nginx svc/ingress-nginx-controller 8080:80
+vim /etc/hosts
+ping nginxsvc.info 
+curl nginxsvc.info:8080
+

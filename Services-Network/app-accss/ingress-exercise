@@ -1,0 +1,14 @@
+# Create the Deployment name apples and image nginx with 3 replicas set
+  kubectl create deployment apples --image=nginx --replicas=3
+# Make the deployment accessible on my.fruit
+  kubectl expose deployment apples --port=80
+# Install the NGINX Ingress Controller
+  kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
+# Create an Ingress Resource
+  kubectl create ing apples --rule="my.fruit/=apples:80"
+# Add an entry in your local /etc/hosts file pointing my.fruit to 127.0.0.1:
+  127.0.0.1   my.fruit
+# Forward traffic from your local machine to the Ingress Controller Pod 
+  kubectl port-forward -n ingress-nginx svc/ingress-nginx-controller 8080:80
+# Now you can test:
+ curl http://my.fruit:8080
